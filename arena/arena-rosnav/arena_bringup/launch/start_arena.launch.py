@@ -148,16 +148,6 @@ def generate_launch_description():
         launch.actions.IncludeLaunchDescription(
             launch.launch_description_sources.PythonLaunchDescriptionSource(
                 os.path.join(get_package_share_directory(
-                    'arena_bringup'), 'launch/utils/map_server.launch.py')
-            ),
-            launch_arguments={
-                'map_file': launch.substitutions.LaunchConfiguration('map_file'),
-                'map_path': launch.substitutions.LaunchConfiguration('map_path')
-            }.items()
-        ),
-        launch.actions.IncludeLaunchDescription(
-            launch.launch_description_sources.PythonLaunchDescriptionSource(
-                os.path.join(get_package_share_directory(
                     'arena_bringup'), 'launch/utils/fake_localization.launch.py')
             ),
             launch_arguments={
@@ -167,12 +157,12 @@ def generate_launch_description():
                 'odom_frame_id': launch.substitutions.LaunchConfiguration('odom_frame_id')
             }.items()
         ),
-        launch.actions.IncludeLaunchDescription(
+       launch.actions.IncludeLaunchDescription(
             launch.launch_description_sources.PythonLaunchDescriptionSource(
                 os.path.join(get_package_share_directory(
                     'arena_bringup'), 'launch/testing/task_generator.launch.py')
             )
-        )
+       )
     ])
     return ld
 

@@ -14,7 +14,7 @@ logger = logging.getLogger("repos")
 
 args = dict(enumerate(sys.argv))
 
-DIR_SRC = os.path.join(os.getcwd(), "src")
+DIR_SRC = os.path.join(os.getcwd(), )
 assert os.path.isdir(DIR_SRC), "Current dir does not appear to be a catkin workspace!"
 
 DIR_ARENA_ROSNAV = "arena/arena-rosnav"

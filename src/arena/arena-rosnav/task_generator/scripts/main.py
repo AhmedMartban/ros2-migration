@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-import rospy
+import rosros
 from task_generator.task_generator_node import TaskGenerator
 
 if __name__ == "__main__":
-    rospy.init_node("task_generator")
+    rosros.init_node("task_generator")
 
     task_generator = TaskGenerator()
 
-    rospy.spin()
+    rosros.spin()

@@ -1,4 +1,4 @@
-import rospy
+import rosros
 
 import gazebo_msgs.msg as gazebo_msgs
 import gazebo_msgs.srv as gazebo_srvs
@@ -7,30 +7,27 @@ import geometry_msgs.msg as geometry_msgs
 
 import std_srvs.srv as std_srvs
 
-
 from task_generator.simulators.simulator_factory import SimulatorFactory
 from task_generator.utils import rosparam_get
 from tf.transformations import quaternion_from_euler
 from task_generator.constants import Config, Constants
 from task_generator.simulators.base_simulator import BaseSimulator
-from task_generator.simulators.simulator_factory import SimulatorFactory
-
 from task_generator.shared import ModelType, Namespace, PositionOrientation, RobotProps
 
 @SimulatorFactory.register(Constants.Simulator.GAZEBO)
 class GazeboSimulator(BaseSimulator):
 
-    _goal_pub: rospy.Publisher
+    _goal_pub: rosros.Publisher
     _robot_name: str
 
-    _unpause: rospy.ServiceProxy
-    _pause: rospy.ServiceProxy
-    _remove_model_srv: rospy.ServiceProxy
+    _unpause: rosros.ServiceProxy
+    _pause: rosros.ServiceProxy
+    _remove_model_srv: rosros.ServiceProxy
 
     def __init__(self, namespace):
 
         super().__init__(namespace)
-        self._goal_pub = rospy.Publisher(
+        self._goal_pub = rosros.Publisher(
             self._namespace("/goal"),
             geometry_msgs.PoseStamped,
             queue_size=1,
@@ -38,33 +35,31 @@ class GazeboSimulator(BaseSimulator):
         )
         self._robot_name = rosparam_get(str, "robot_model", "")
 
-        rospy.wait_for_service("/gazebo/spawn_urdf_model")
-        rospy.wait_for_service("/gazebo/spawn_sdf_model")
-        rospy.wait_for_service("/gazebo/set_model_state")
-        rospy.wait_for_service("/gazebo/set_model_state", timeout=20)
+        rosros.wait_for_service("/gazebo/spawn_urdf_model")
+        rosros.wait_for_service("/gazebo/spawn_sdf_model")
+        rosros.wait_for_service("/gazebo/set_model_state")
+        rosros.wait_for_service("/gazebo/set_model_state", timeout=20)
 
-        self._spawn_model[ModelType.URDF] = rospy.ServiceProxy(
-            self._namespace(
-                "gazebo", "spawn_urdf_model"), gazebo_srvs.SpawnModel
+        self._spawn_model[ModelType.URDF] = rosros.ServiceProxy(
+            self._namespace("gazebo", "spawn_urdf_model"), gazebo_srvs.SpawnModel
         )
-        self._spawn_model[ModelType.SDF] = rospy.ServiceProxy(
-            self._namespace(
-                "gazebo", "spawn_sdf_model"), gazebo_srvs.SpawnModel
+        self._spawn_model[ModelType.SDF] = rosros.ServiceProxy(
+            self._namespace("gazebo", "spawn_sdf_model"), gazebo_srvs.SpawnModel
         )
-        self._move_model_srv = rospy.ServiceProxy(
+        self._move_model_srv = rosros.ServiceProxy(
             "/gazebo/set_model_state", gazebo_srvs.SetModelState, persistent=True
         )
-        self._unpause = rospy.ServiceProxy(
+        self._unpause = rosros.ServiceProxy(
             "/gazebo/unpause_physics", std_srvs.Empty)
-        self._pause = rospy.ServiceProxy(
+        self._pause = rosros.ServiceProxy(
             "/gazebo/pause_physics", std_srvs.Empty)
 
-        rospy.loginfo("Waiting for gazebo services...")
-        rospy.wait_for_service("gazebo/spawn_sdf_model")
-        rospy.wait_for_service("gazebo/delete_model")
+        rosros.loginfo("Waiting for gazebo services...")
+        rosros.wait_for_service("gazebo/spawn_sdf_model")
+        rosros.wait_for_service("gazebo/delete_model")
 
-        rospy.loginfo("service: spawn_sdf_model is available ....")
-        self._remove_model_srv = rospy.ServiceProxy(
+        rosros.loginfo("service: spawn_sdf_model is available ....")
+        self._remove_model_srv = rosros.ServiceProxy(
             "gazebo/delete_model", gazebo_srvs.DeleteModel)
 
     def before_reset_task(self):
@@ -73,8 +68,8 @@ class GazeboSimulator(BaseSimulator):
     def after_reset_task(self):
         try:
             self._unpause()
-        except rospy.service.ServiceException as e:  # gazebo isn't the most reliable
-            rospy.logwarn(e)
+        except rosros.ServiceException as e:  # gazebo isn't the most reliable
+            rosros.logwarn(e)
 
     # ROBOT
 
@@ -117,9 +112,9 @@ class GazeboSimulator(BaseSimulator):
         request.reference_frame = "world"
 
         if isinstance(entity, RobotProps):
-            rospy.set_param(request.robot_namespace(
+            rosros.set_param(request.robot_namespace(
                 "robot_description"), model.description)
-            rospy.set_param(request.robot_namespace(
+            rosros.set_param(request.robot_namespace(
                 "tf_prefix"), str(request.robot_namespace))
 
         res = self.spawn_model(model.type, request)
@@ -133,7 +128,7 @@ class GazeboSimulator(BaseSimulator):
     def _publish_goal(self, goal: PositionOrientation):
         goal_msg = geometry_msgs.PoseStamped()
         goal_msg.header.seq = 0
-        goal_msg.header.stamp = rospy.get_rostime()
+        goal_msg.header.stamp = rosros.get_rostime()
         goal_msg.header.frame_id = "map"
         goal_msg.pose.position.x = goal.x
         goal_msg.pose.position.y = goal.y

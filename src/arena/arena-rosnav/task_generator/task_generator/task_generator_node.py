@@ -5,10 +5,9 @@ import os
 import traceback
 from typing import Dict, List
 
-import rospkg
-import rospy
+import rosros
 import yaml
-from rospkg import RosPack
+from rosros import RosPack
 from task_generator.constants import Config, Constants
 from task_generator.manager.entity_manager.entity_manager import EntityManager
 from task_generator.manager.entity_manager.flatland_manager import FlatlandManager
@@ -45,7 +44,7 @@ import std_srvs.srv as std_srvs
 def create_default_robot_list(
     robot_model: ModelWrapper,
     name: str,
-    inter_planner:str,
+    inter_planner: str,
     local_planner: str,
     agent: str
 ) -> List[Robot]:
@@ -67,7 +66,7 @@ def read_robot_setup_file(setup_file: str) -> List[Dict]:
     try:
         with open(
             os.path.join(
-                rospkg.RosPack().get_path("arena_bringup"),
+                RosPack().get_path("arena_bringup"),
                 "configs",
                 "robot_setup",
                 setup_file,
@@ -80,7 +79,7 @@ def read_robot_setup_file(setup_file: str) -> List[Dict]:
 
     except:
         traceback.print_exc()
-        rospy.signal_shutdown("")
+        rosros.signal_shutdown("")
         raise Exception()
 
 
@@ -98,8 +97,8 @@ class TaskGenerator:
     _entity_manager: EntityManager
     _task: Task
 
-    _pub_scenario_reset: rospy.Publisher
-    _pub_scenario_finished: rospy.Publisher
+    _pub_scenario_reset: rosros.Publisher
+    _pub_scenario_finished: rosros.Publisher
 
     _start_time: float
     _number_of_resets: int
@@ -115,15 +114,15 @@ class TaskGenerator:
 
         # Publishers
         if not self._train_mode:
-            self._pub_scenario_reset = rospy.Publisher(
-                "scenario_reset", std_msgs.Int16, queue_size=1, latch=True
+            self._pub_scenario_reset = rosros.create_publisher(
+                std_msgs.Int16, "scenario_reset", qos_profile=1, latch=True
             )
-            self._pub_scenario_finished = rospy.Publisher(
-                "scenario_finished", std_msgs.Empty, queue_size=10
+            self._pub_scenario_finished = rosros.create_publisher(
+                std_msgs.Empty, "scenario_finished", qos_profile=10
             )
 
             # Services
-            rospy.Service("reset_task", std_srvs.Empty, self._reset_task_srv_callback)
+            rosros.create_service("reset_task", std_srvs.Empty, self._reset_task_srv_callback)
 
         # Vars
         self._env_wrapper = SimulatorFactory.instantiate(Utils.get_simulator())(
@@ -136,26 +135,26 @@ class TaskGenerator:
         )
 
         if not self._train_mode:
-            self._start_time = rospy.get_time()
+            self._start_time = rosros.get_time()
             self._task = self._get_predefined_task()
-            rospy.set_param("/robot_names", self._task.robot_names)
+            rosros.set_param("/robot_names", self._task.robot_names)
 
             self._number_of_resets = 0
 
-            self.srv_start_model_visualization = rospy.ServiceProxy(
+            self.srv_start_model_visualization = rosros.create_service_proxy(
                 "start_model_visualization", std_srvs.Empty
             )
             self.srv_start_model_visualization(std_srvs.EmptyRequest())
 
-            rospy.sleep(1)
+            rosros.sleep(1)
 
             self.reset_task(first_map=True)
 
-            rospy.sleep(1)
+            rosros.sleep(1)
 
             try:
-                rospy.set_param("task_generator_setup_finished", True)
-                self.srv_setup_finished = rospy.ServiceProxy(
+                rosros.set_param("task_generator_setup_finished", True)
+                self.srv_setup_finished = rosros.create_service_proxy(
                     "task_generator_setup_finished", std_srvs.Empty
                 )
                 self.srv_setup_finished(std_srvs.EmptyRequest())
@@ -163,7 +162,7 @@ class TaskGenerator:
                 pass
 
             # Timers
-            rospy.Timer(rospy.Duration(nsecs=int(0.5e9)), self._check_task_status)
+            rosros.create_timer(rosros.Duration(nsecs=int(0.5e9)), self._check_task_status)
 
         # SETUP
 
@@ -176,9 +175,9 @@ class TaskGenerator:
                 self._namespace
             )
 
-        rospy.wait_for_service("/distance_map")
+        rosros.wait_for_service("/distance_map")
 
-        service_client_get_map = rospy.ServiceProxy(
+        service_client_get_map = rosros.create_service_proxy(
             "/distance_map", map_distance_server_srvs.GetDistanceMap
         )
 
@@ -241,7 +240,7 @@ class TaskGenerator:
         if rosparam_get(str, "map_file", "") == "dynamic_map":
             tm_modules.append(Constants.TaskMode.TM_Module.DYNAMIC_MAP)
 
-        rospy.logdebug("utils calls task factory")
+        rosros.logdebug("utils calls task factory")
         task = TaskFactory.combine(
             modules=[Constants.TaskMode.TM_Module(module) for module in tm_modules]
         )(
@@ -311,11 +310,11 @@ class TaskGenerator:
     # RUNTIME
 
     def reset_task(self, **kwargs):
-        self._start_time = rospy.get_time()
+        self._start_time = rosros.get_time()
 
         self._env_wrapper.before_reset_task()
 
-        rospy.loginfo("resetting")
+        rosros.loginfo("resetting")
 
         is_end = self._task.reset(callback=lambda: False, **kwargs)
 
@@ -327,16 +326,16 @@ class TaskGenerator:
 
         self._env_wrapper.after_reset_task()
 
-        rospy.loginfo("=============")
-        rospy.loginfo("Task Reset!")
-        rospy.loginfo("=============")
+        rosros.loginfo("=============")
+        rosros.loginfo("Task Reset!")
+        rosros.loginfo("=============")
 
     def _check_task_status(self, *args, **kwargs):
         if self._task.is_done:
             self.reset_task()
 
     def _reset_task_srv_callback(self, req: std_srvs.EmptyRequest):
-        rospy.logdebug("Task Generator received task-reset request!")
+        rosros.logdebug("Task Generator received task-reset request!")
 
         self.reset_task()
 
@@ -346,14 +345,14 @@ class TaskGenerator:
         if self._number_of_resets < Config.General.DESIRED_EPISODES:
             return
 
-        rospy.loginfo(f"Shutting down. All {int(Config.General.DESIRED_EPISODES)} tasks completed")
+        rosros.loginfo(f"Shutting down. All {int(Config.General.DESIRED_EPISODES)} tasks completed")
 
-        rospy.signal_shutdown("Finished all episodes of the current scenario")
+        rosros.signal_shutdown("Finished all episodes of the current scenario")
 
 
 if __name__ == "__main__":
-    rospy.init_node("task_generator")
+    rosros.init_node("task_generator")
 
     task_generator = TaskGenerator()
 
-    rospy.spin()
+    rosros.spin()

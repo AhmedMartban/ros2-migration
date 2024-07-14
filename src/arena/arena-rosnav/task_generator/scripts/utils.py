@@ -4,9 +4,9 @@ import os
 import traceback
 from typing import Dict, List
 
-import rospkg
+import rosros
 import yaml
-import rospy
+from rosros import RosPack
 
 from task_generator.shared import ModelWrapper, Robot
 

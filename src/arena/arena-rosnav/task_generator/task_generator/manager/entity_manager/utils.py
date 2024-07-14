@@ -9,7 +9,7 @@ import numpy as np
 import rospkg
 
 import yaml
-import rospy
+import rosros
 from task_generator.constants import Constants, Config
 from task_generator.manager.utils import WorldMap, WorldOccupancy
 
@@ -190,7 +190,7 @@ class YAMLUtil:
         plugins: List[Dict] = description.get("plugins", [])
 
         if Utils.get_arena_type() == Constants.ArenaType.TRAINING:
-            if rospy.get_param("laser/full_range_laser", False):
+            if rosros.get_param("laser/full_range_laser", False):
                 plugins.append(Constants.PLUGIN_FULL_RANGE_LASER.copy())
 
             for plugin in plugins:
@@ -207,11 +207,6 @@ class YAMLUtil:
                             else plugin.get(prop, default_val)
                         ),
                     )
-
-                    # if plugin["type"] == "DiffDrive":
-                    #     plugin["odom_frame_id"] = YAMLUtil.update_frame_id(
-                    #         namespace, "odom"
-                    #     )
 
             return description
 
@@ -266,9 +261,6 @@ def walls_to_obstacle(world_map: WorldMap, height: float = 3) -> Obstacle:
         </heightmap>
         """
 
-    # TODO precompute heightmap as own geometry, gazebo heightmap implementation isn't optimal
-    # mesh = ""
-
     sdf_description = f"""
         <?xml version="1.0" ?>
         <sdf version="1.5">
@@ -281,12 +273,6 @@ def walls_to_obstacle(world_map: WorldMap, height: float = 3) -> Obstacle:
                             {mesh}
                         </geometry>
                     </visual>
-                    <!--<collision name="collision">
-                        <pose>0 0 0 0 0 0</pose>
-                        <geometry>
-                            {mesh}
-                        </geometry>
-                    </collision>-->
                 </link>
             </model>
         </sdf>
@@ -295,7 +281,6 @@ def walls_to_obstacle(world_map: WorldMap, height: float = 3) -> Obstacle:
     model = ModelWrapper.Constant(
         model_name,
         models={
-            # ModelType.YAML: Model(type=ModelType.YAML, name=model_name, description="", path=""),
             ModelType.SDF: Model(
                 type=ModelType.SDF,
                 name=model_name,

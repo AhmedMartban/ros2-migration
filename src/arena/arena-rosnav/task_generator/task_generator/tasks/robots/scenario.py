@@ -4,7 +4,7 @@ import os
 from typing import List, NamedTuple
 
 import rospkg
-import rospy
+import rosros
 from task_generator.constants import Constants
 from task_generator.shared import PositionOrientation, PositionRadius, rosparam_get
 from task_generator.tasks.robots import TM_Robots
@@ -115,13 +115,13 @@ class TM_Scenario(TM_Robots):
 
         if setup_robot_length > scenario_robots_length:
             managed_robots = managed_robots[:scenario_robots_length]
-            rospy.logwarn_once(
+            rosros.logwarn_once(
                 "Roboto setup contains more robots than the scenario file."
             )
 
         if scenario_robots_length > setup_robot_length:
             SCENARIO_ROBOTS = SCENARIO_ROBOTS[:setup_robot_length]
-            rospy.logwarn_once("Scenario file contains more robots than setup.")
+            rosros.logwarn_once("Scenario file contains more robots than setup.")
 
         for robot, config in zip(managed_robots, SCENARIO_ROBOTS):
             robot.reset(start_pos=config.start, goal_pos=config.goal)

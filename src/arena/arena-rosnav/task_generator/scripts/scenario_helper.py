@@ -1,11 +1,9 @@
 #! /usr/bin/env python3
 
-import rospy
+import rosros
 import nav_msgs.srv as nav_msgs_srv
 import numpy as np
-
 from matplotlib import pyplot as plt
-
 
 def on_click(event, map):
     x = event.xdata
@@ -19,13 +17,12 @@ def on_click(event, map):
 
     print(f"Point: [{real_x}, {real_y}, 0]")
 
-
 if __name__ == "__main__":
-    rospy.init_node("task_generator")
+    rosros.init_node("task_generator")
 
-    rospy.wait_for_service("/static_map")
+    rosros.wait_for_service("/static_map")
 
-    service_client_get_map = rospy.ServiceProxy("/static_map", nav_msgs_srv.GetMap)
+    service_client_get_map = rosros.ServiceProxy("/static_map", nav_msgs_srv.GetMap)
 
     map = service_client_get_map().map
     map.data = np.array(map.data)
@@ -43,6 +40,4 @@ if __name__ == "__main__":
 
     plt.show()
 
-    # imgplot.show()
-
-    rospy.spin()
+    rosros.spin()

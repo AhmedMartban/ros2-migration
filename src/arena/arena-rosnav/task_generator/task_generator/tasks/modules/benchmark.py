@@ -13,7 +13,7 @@ import yaml
 import subprocess
 
 import rospkg
-import rospy
+from rosros import rospify as rospy
 import arena_evaluation_msgs.srv as arena_evaluation_srvs
 
 import logging
@@ -29,9 +29,9 @@ class _Config(typing.NamedTuple):
     @classmethod
     def parse(cls, obj: typing.Dict):
         return cls(
-            suite = cls.Suite(**obj["suite"]),
-            contest = cls.Contest(**obj["contest"]),
-            general = cls.General(**obj["general"])
+            suite=cls.Suite(**obj["suite"]),
+            contest=cls.Contest(**obj["contest"]),
+            general=cls.General(**obj["general"])
         )
 
     class Suite(typing.NamedTuple):
@@ -48,17 +48,15 @@ class _Config(typing.NamedTuple):
     contest: Contest
     general: General
 
-
 class Suite(typing.NamedTuple):
 
     @classmethod
     def parse(cls, name: str, obj: typing.Dict):
         return cls(
-            name = name,
-            stages = [
+            name=name,
+            stages=[
                 cls.Stage.parse(stage)
-                for stage
-                in obj["stages"]
+                for stage in obj["stages"]
             ]
         )
 
@@ -91,7 +89,6 @@ class Suite(typing.NamedTuple):
             obj.setdefault("timeout", Config.Robot.TIMEOUT)
             obj.setdefault("seed", cls.hash(obj))
             return cls(**obj)
-        
 
     name: str
     stages: typing.List[Stage]
@@ -112,11 +109,10 @@ class Contest(typing.NamedTuple):
     @classmethod
     def parse(cls, name: str, obj: typing.Dict):
         return cls(
-            name = name,
-            contestants = [
+            name=name,
+            contestants=[
                 cls.Contestant.parse(contestant)
-                for contestant
-                in obj["contestants"]
+                for contestant in obj["contestants"]
             ]
         )
 
@@ -200,7 +196,6 @@ class Mod_Benchmark(TM_Module):
             runid, contest, suite, headless = f.read().split(" ")
         return runid, Contest.Index(contest), Suite.Index(suite), int(headless)
 
-
     @classmethod
     def _taskgen_backup(cls):
         if os.path.exists(bkup_file := cls.TASK_GENERATOR_CONFIG + ".bkup"): return
@@ -237,12 +232,10 @@ class Mod_Benchmark(TM_Module):
                 fw.write(fr.read())
         if cleanup:
             os.remove(cls.TASK_GENERATOR_CONFIG_BKUP)
-        
 
     # RUNTIME
 
     def __init__(self, **kwargs):
-        
         self._config = self._load_config()
         self._suite = self._load_suite(self._config.suite.config)
         self._contest = self._load_contest(self._config.contest.config)
@@ -289,7 +282,6 @@ class Mod_Benchmark(TM_Module):
     
     def after_reset(self):
         self._episode += 1
-
 
     _logger_object: logging.Logger
 

@@ -2,13 +2,10 @@ import dataclasses
 from typing import Optional
 
 import numpy as np
-import rospy
-import roslaunch
+import rosros
 import os
 import scipy.spatial.transform
 
-import roslaunch
-import rospy
 from task_generator.constants import Constants, Config
 from task_generator.manager.entity_manager.entity_manager import EntityManager
 from task_generator.manager.entity_manager.utils import YAMLUtil
@@ -51,10 +48,10 @@ class RobotManager:
 
     _robot: Robot
 
-    _move_base_pub: rospy.Publisher
-    _move_base_goal_pub: rospy.Publisher
-    _pub_goal_timer: rospy.Timer
-    _clear_costmaps_srv: rospy.ServiceProxy
+    _move_base_pub: rosros.Publisher
+    _move_base_goal_pub: rosros.Publisher
+    _pub_goal_timer: rosros.Timer
+    _clear_costmaps_srv: rosros.ServiceProxy
 
     def __init__(
         self, namespace: Namespace, entity_manager: EntityManager, robot: Robot
@@ -108,15 +105,15 @@ class RobotManager:
 
         _gen_goal_topic = self.namespace("move_base_simple", "goal")
 
-        self._move_base_goal_pub = rospy.Publisher(
+        self._move_base_goal_pub = rosros.Publisher(
             _gen_goal_topic, geometry_msgs.PoseStamped, queue_size=10
         )
 
-        self._pub_goal_timer = rospy.Timer(
-            rospy.Duration(nsecs=int(0.25e9)), self._publish_goal_periodically
+        self._pub_goal_timer = rosros.Timer(
+            rosros.Duration(nsecs=int(0.25e9)), self._publish_goal_periodically
         )
 
-        rospy.Subscriber(
+        rosros.Subscriber(
             self.namespace("odom"), nav_msgs.Odometry, self._robot_pos_callback
         )
 
@@ -125,13 +122,13 @@ class RobotManager:
 
         self._launch_robot()
         self._robot_radius = (
-            float(rospy.get_param_cached("robot_radius"))
+            float(rosros.get_param_cached("robot_radius"))
             if Utils.get_arena_type() == Constants.ArenaType.TRAINING
             else rosparam_get(float, self.namespace("robot_radius"))
         )
 
-        # rospy.wait_for_service(os.path.join(self.namespace, "move_base", "clear_costmaps"))
-        self._clear_costmaps_srv = rospy.ServiceProxy(
+        # rosros.wait_for_service(os.path.join(self.namespace, "move_base", "clear_costmaps"))
+        self._clear_costmaps_srv = rosros.ServiceProxy(
             self.namespace("move_base", "clear_costmaps"), std_srvs.Empty
         )
 
@@ -178,7 +175,7 @@ class RobotManager:
             self.move_robot_to_pos(start_pos)
 
             if self._robot.record_data_dir is not None:
-                rospy.set_param(
+                rosros.set_param(
                     self.namespace("start"), [float(v) for v in self._start_pos]
                 )
 
@@ -187,7 +184,7 @@ class RobotManager:
             self._publish_goal(self._goal_pos)
 
             if self._robot.record_data_dir is not None:
-                rospy.set_param(
+                rosros.set_param(
                     self.namespace("goal"), [float(v) for v in self._goal_pos]
                 )
 
@@ -222,7 +219,7 @@ class RobotManager:
     def _publish_goal(self, goal: PositionOrientation):
         goal_msg = geometry_msgs.PoseStamped()
         goal_msg.header.seq = 0
-        goal_msg.header.stamp = rospy.get_rostime()
+        goal_msg.header.stamp = rosros.get_rostime()
         goal_msg.header.frame_id = "map"
         goal_msg.pose.position.x = goal.x
         goal_msg.pose.position.y = goal.y
@@ -235,7 +232,7 @@ class RobotManager:
         self._move_base_goal_pub.publish(goal_msg)
 
     def _launch_robot(self):
-        rospy.logwarn(f"START WITH MODEL {self.namespace}")
+        rosros.logwarn(f"START WITH MODEL {self.namespace}")
 
         if Utils.get_arena_type() != Constants.ArenaType.TRAINING:
             roslaunch_file = roslaunch.rlutil.resolve_launch_arguments(  # type: ignore
@@ -270,22 +267,22 @@ class RobotManager:
             self.process.start()
 
         # Overwrite default move base params
-        base_frame: str = rospy.get_param_cached(self.namespace("robot_base_frame"))
-        sensor_frame: str = rospy.get_param_cached(self.namespace("robot_sensor_frame"))
+        base_frame: str = rosros.get_param_cached(self.namespace("robot_base_frame"))
+        sensor_frame: str = rosros.get_param_cached(self.namespace("robot_sensor_frame"))
 
-        rospy.set_param(
+        rosros.set_param(
             self.namespace("move_base", "global_costmap", "robot_base_frame"),
             os.path.join(self.name, base_frame),
         )
-        rospy.set_param(
+        rosros.set_param(
             self.namespace("move_base", "local_costmap", "robot_base_frame"),
             os.path.join(self.name, base_frame),
         )
-        rospy.set_param(
+        rosros.set_param(
             self.namespace("move_base", "local_costmap", "scan", "sensor_frame"),
             os.path.join(self.name, sensor_frame),
         )
-        rospy.set_param(
+        rosros.set_param(
             self.namespace("move_base", "global_costmap", "scan", "sensor_frame"),
             os.path.join(self.name, base_frame),
         )

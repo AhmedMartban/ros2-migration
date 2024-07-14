@@ -1,4 +1,4 @@
-import rospy
+import rosros
 from task_generator.manager.entity_manager.utils import ObstacleLayer
 from task_generator.manager.utils import WorldMap, WorldWalls
 from task_generator.shared import DynamicObstacle, Namespace, Obstacle, PositionOrientation, Robot
@@ -14,20 +14,19 @@ class EntityManager:
     _simulator: BaseSimulator
 
     _robot_name: str
-    _goal_pub: rospy.Publisher
+    _goal_pub: rosros.Publisher
 
     def __init__(self, namespace: Namespace, simulator: BaseSimulator):
         """
-            Initialize dynamic obstacle manager.
+        Initialize dynamic obstacle manager.
 
-            @namespace: global namespace
-            @simulator: Simulator instance
+        @namespace: global namespace
+        @simulator: Simulator instance
         """
-
         self._simulator = simulator
         self._namespace = namespace
 
-        self._goal_pub = rospy.Publisher(self._namespace(
+        self._goal_pub = rosros.Publisher(self._namespace(
             "/goal"), geometry_msgs.PoseStamped, queue_size=1, latch=True)
 
         self._robot_name = rosparam_get(str, "robot_model", "")

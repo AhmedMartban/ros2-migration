@@ -1,7 +1,7 @@
 import os
 from typing import Dict, List, Type
 
-import rospy
+import rosros
 from rospkg import RosPack
 
 from task_generator.constants import Constants
@@ -43,7 +43,7 @@ class TaskFactory:
     def register_robots(cls, name: Constants.TaskMode.TM_Robots):
         def inner_wrapper(wrapped_class: Type[TM_Robots]):
             assert (
-                name not in cls.registry_obstacles
+                name not in cls.registry_robots
             ), f"TaskMode '{name}' for robots already exists!"
             assert issubclass(wrapped_class, TM_Robots)
 
@@ -56,7 +56,7 @@ class TaskFactory:
     def register_module(cls, name: Constants.TaskMode.TM_Module):
         def inner_wrapper(wrapped_class: Type[TM_Module]):
             assert (
-                name not in cls.registry_obstacles
+                name not in cls.registry_module
             ), f"TaskMode '{name}' for module already exists!"
             assert issubclass(wrapped_class, TM_Module)
 
@@ -117,15 +117,15 @@ class TaskFactory:
 
                 self._train_mode = rosparam_get(bool, "/train_mode", False)
 
-                self.__reset_start = rospy.Publisher(
+                self.__reset_start = rosros.Publisher(
                     self.TOPIC_RESET_START, std_msgs.Empty, queue_size=1
                 )
-                self.__reset_end = rospy.Publisher(
+                self.__reset_end = rosros.Publisher(
                     self.TOPIC_RESET_END, std_msgs.Empty, queue_size=1
                 )
                 self.__reset_mutex = False
 
-                rospy.Subscriber("/clock", rosgraph_msgs.Clock, self._clock_callback)
+                rosros.Subscriber("/clock", rosgraph_msgs.Clock, self._clock_callback)
                 self.last_reset_time = 0
                 self.clock = rosgraph_msgs.Clock()
 
@@ -155,8 +155,8 @@ class TaskFactory:
                 ]
 
                 if self._train_mode:
-                    self.set_tm_robots(Constants.TaskMode.TM_Robots(rospy.get_param("tm_robots")))
-                    self.set_tm_obstacles(Constants.TaskMode.TM_Obstacles(rospy.get_param("tm_obstacles")))
+                    self.set_tm_robots(Constants.TaskMode.TM_Robots(rosros.get_param("tm_robots")))
+                    self.set_tm_obstacles(Constants.TaskMode.TM_Obstacles(rosros.get_param("tm_obstacles")))
 
             def set_tm_robots(self, tm_robots: Constants.TaskMode.TM_Robots):
                 """
@@ -229,9 +229,9 @@ class TaskFactory:
 
                     self.last_reset_time = self.clock.clock.secs
 
-                except rospy.ServiceException as e:
-                    rospy.logerr(repr(e))
-                    rospy.signal_shutdown("Reset error!")
+                except rosros.ServiceException as e:
+                    rosros.logerr(repr(e))
+                    rosros.signal_shutdown("Reset error!")
                     raise Exception("reset error!") from e
 
                 finally:
@@ -254,18 +254,18 @@ class TaskFactory:
 
                 """
                 while self.__reset_mutex:
-                    rospy.sleep(0.001)
+                    rosros.sleep(0.001)
                 self.__reset_mutex = True
 
                 try:
-                    rospy.set_param(self.PARAM_RESETTING, True)
+                    rosros.set_param(self.PARAM_RESETTING, True)
                     self._reset_task()
 
                 except Exception as e:
                     raise e
 
                 finally:
-                    rospy.set_param(self.PARAM_RESETTING, False)
+                    rosros.set_param(self.PARAM_RESETTING, False)
                     self.__reset_mutex = False
 
             def reset(self, **kwargs):

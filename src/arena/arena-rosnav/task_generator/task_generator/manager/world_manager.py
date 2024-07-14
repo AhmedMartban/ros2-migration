@@ -3,7 +3,7 @@ from math import floor
 from typing import Collection, List, Optional, Tuple
 import numpy as np
 import scipy.signal
-import rospy
+import rosros
 from task_generator.constants import Config
 
 from task_generator.manager.utils import World, WorldEntities, WorldMap, WorldObstacleConfiguration, WorldOccupancy, WorldWalls, configurations_to_obstacles, occupancy_to_walls
@@ -298,7 +298,7 @@ class WorldManager:
                                 int((i % 5) * self._shape[0]/5)
                             )
                         ) for i in range(to_produce)]
-                    rospy.logerr(f"Couldn't find enough empty cells for {to_produce} requests")
+                    rosros.logerr(f"Couldn't find enough empty cells for {to_produce} requests")
                 
                 finally:
                     return result

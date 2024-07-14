@@ -8,7 +8,8 @@ from task_generator.constants import Constants
 from task_generator.manager.entity_manager.utils import ObstacleLayer
 from task_generator.manager.utils import WorldMap
 
-import rospy
+import rosros
+from rosros import rospify as rospy
 from task_generator.tasks.modules import TM_Module
 from task_generator.tasks.task_factory import TaskFactory
 from task_generator.utils import rosparam_get
@@ -27,9 +28,9 @@ class Mod_DynamicMap(TM_Module):
     It provides functionality for requesting new maps, resetting tasks, and updating the map based on distance information.
     """
 
-    __map_request_pub: rospy.Publisher
-    __task_reset_pub: rospy.Publisher
-    __get_dist_map_service: rospy.ServiceProxy
+    __map_request_pub: rosros.Publisher
+    __task_reset_pub: rosros.Publisher
+    __get_dist_map_service: rosros.ServiceProxy
 
     PARAM_MAP_FILE = "map_file"
     PARAM_EPISODES = "/dynamic_map/curr_eps"
@@ -62,15 +63,15 @@ class Mod_DynamicMap(TM_Module):
         rospy.Subscriber(self.TOPIC_RESET, std_msgs.String, self._cb_task_reset)
 
         # requests new map from map generator
-        self.__map_request_pub = rospy.Publisher(
+        self.__map_request_pub = rosros.Publisher(
             self.TOPIC_REQUEST_MAP, std_msgs.String, queue_size=1
         )
         # task reset for all taskmanagers when one resets
-        self.__task_reset_pub = rospy.Publisher(
+        self.__task_reset_pub = rosros.Publisher(
             self.TOPIC_RESET, std_msgs.String, queue_size=1
         )
 
-        self.__get_dist_map_service = rospy.ServiceProxy(
+        self.__get_dist_map_service = rosros.ServiceProxy(
             self.SERVICE_DISTANCE_MAP, map_distance_server_srvs.GetDistanceMap
         )
 
@@ -141,7 +142,7 @@ class Mod_DynamicMap(TM_Module):
         try:
             rospy.wait_for_message(self.TOPIC_MAP, nav_msgs.OccupancyGrid, timeout=60)
             rospy.wait_for_message(self.TOPIC_SIGNAL_MAP, std_msgs.String, timeout=120)
-        except rospy.ROSException:
+        except rosros.ROSException:
             rospy.logwarn(
                 "[Map Generator] Timeout while waiting for new map. Continue with current map."
             )

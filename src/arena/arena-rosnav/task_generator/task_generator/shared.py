@@ -19,12 +19,12 @@ from typing import (
 
 import enum
 import yaml
-import rospy
+import rosros
 
 T = TypeVar("T")
 U = TypeVar("U")
-_unspecified = rospy.client._Unspecified()
-_UNSPECIFIED = rospy.client._Unspecified
+_unspecified = rosros.client._Unspecified()
+_UNSPECIFIED = rosros.client._Unspecified
 _notfound = object()
 
 
@@ -38,7 +38,7 @@ def rosparam_get(
     @default: Default value. Raise ValueError is default is unset and parameter can't be found.
     """
 
-    val = rospy.get_param(param_name=param_name, default=_notfound)
+    val = rosros.get_param(param_name=param_name, default=_notfound)
 
     if val == _notfound:
         if isinstance(default, _UNSPECIFIED):
@@ -267,7 +267,8 @@ class EntityProps:
 
 
 @dataclasses.dataclass(frozen=True)
-class ObstacleProps(EntityProps): ...
+class ObstacleProps(EntityProps):
+    pass
 
 
 @dataclasses.dataclass(frozen=True)
@@ -350,7 +351,7 @@ class Robot(RobotProps):
         )
         agent = str(obj.get("agent", rosparam_get(str, "agent_name", "")))
         record_data = obj.get(
-            "record_data_dir", rospy.get_param("record_data_dir", None)
+            "record_data_dir", rosros.get_param("record_data_dir", None)
         )
 
         return Robot(

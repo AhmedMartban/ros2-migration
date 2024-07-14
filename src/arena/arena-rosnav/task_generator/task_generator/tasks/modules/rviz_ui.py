@@ -1,6 +1,6 @@
 from typing import Dict
 import genpy
-import rospy
+import rosros
 from task_generator.constants import Constants
 from task_generator.shared import PositionOrientation
 from task_generator.tasks import Task
@@ -18,7 +18,6 @@ class Mod_OverrideRobot(TM_Module):
     TOPIC_NEW_SCENARIO = "/clicked_point"
     PARAM_WAYPOINTS = "guided_waypoints"
 
-
     _timeouts: Dict[int, genpy.Time]
 
     def __init__(self, task: Task, **kwargs):
@@ -26,12 +25,21 @@ class Mod_OverrideRobot(TM_Module):
 
         self._timeouts = dict()
 
-        rospy.Subscriber(self.TOPIC_SET_POSITION,
-                         geometry_msgs.PoseWithCovarianceStamped, self._cb_set_position)
-        rospy.Subscriber(self.TOPIC_SET_GOAL,
-                         geometry_msgs.PoseStamped, self._cb_set_goal)
-        rospy.Subscriber(self.TOPIC_NEW_SCENARIO,
-                         geometry_msgs.PointStamped, self._cb_new_scenario)
+        rosros.Subscriber(
+            self.TOPIC_SET_POSITION,
+            geometry_msgs.PoseWithCovarianceStamped,
+            self._cb_set_position
+        )
+        rosros.Subscriber(
+            self.TOPIC_SET_GOAL,
+            geometry_msgs.PoseStamped,
+            self._cb_set_goal
+        )
+        rosros.Subscriber(
+            self.TOPIC_NEW_SCENARIO,
+            geometry_msgs.PointStamped,
+            self._cb_new_scenario
+        )
         
     def _reset_timeout(self, index: int):
         self._timeouts[index] = self._TASK.clock.clock

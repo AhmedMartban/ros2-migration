@@ -1,5 +1,5 @@
 from typing import Dict, List
-import rospy
+import rosros
 from task_generator.constants import Constants
 from task_generator.shared import PositionOrientation
 from task_generator.tasks.robots.random import TM_Random
@@ -99,7 +99,7 @@ class TM_Guided(TM_Random):
             None
         """
         self._waypoints.append(position)
-        rospy.set_param(self.PARAM_WAYPOINTS, [tuple(wp) for wp in self._waypoints])
+        rosros.set_param(self.PARAM_WAYPOINTS, [tuple(wp) for wp in self._waypoints])
 
         if len(self._waypoints) == 1:
             for robot in self._PROPS.robot_managers:
@@ -123,4 +123,4 @@ class TM_Guided(TM_Random):
             robot.reset(robot.start_pos, robot.start_pos)
 
         self._waypoints = []
-        rospy.set_param(self.PARAM_WAYPOINTS, self._waypoints)
+        rosros.set_param(self.PARAM_WAYPOINTS, self._waypoints)

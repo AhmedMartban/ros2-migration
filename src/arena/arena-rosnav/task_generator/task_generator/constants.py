@@ -6,7 +6,7 @@ from typing import Any, Callable, Optional
 
 import numpy as np
 
-import rospy
+import rosros
 from task_generator.shared import Namespace, rosparam_get
 import dynamic_reconfigure.client
 
@@ -87,9 +87,9 @@ class Constants:
 
 @dataclasses.dataclass
 class TaskConfig_General:
-    WAIT_FOR_SERVICE_TIMEOUT: float = dataclasses.field(default_factory=lambda:rosparam_get(float, "timeout_wait_for_service", 60))
-    MAX_RESET_FAIL_TIMES: int = dataclasses.field(default_factory=lambda:rosparam_get(int, "max_reset_fail_times", 10))
-    RNG: np.random.Generator = dataclasses.field(default_factory=lambda:np.random.default_rng())
+    WAIT_FOR_SERVICE_TIMEOUT: float = dataclasses.field(default_factory=lambda: rosparam_get(float, "timeout_wait_for_service", 60))
+    MAX_RESET_FAIL_TIMES: int = dataclasses.field(default_factory=lambda: rosparam_get(int, "max_reset_fail_times", 10))
+    RNG: np.random.Generator = dataclasses.field(default_factory=lambda: np.random.default_rng())
     DESIRED_EPISODES: float = float("inf")
 
 
@@ -108,9 +108,9 @@ class TaskConfig_Obstacles:
 
 @dataclasses.dataclass
 class TaskConfig:
-    General: TaskConfig_General = dataclasses.field(default_factory=lambda:TaskConfig_General())
-    Robot: TaskConfig_Robot = dataclasses.field(default_factory=lambda:TaskConfig_Robot())
-    Obstacles: TaskConfig_Obstacles = dataclasses.field(default_factory=lambda:TaskConfig_Obstacles())
+    General: TaskConfig_General = dataclasses.field(default_factory=lambda: TaskConfig_General())
+    Robot: TaskConfig_Robot = dataclasses.field(default_factory=lambda: TaskConfig_Robot())
+    Obstacles: TaskConfig_Obstacles = dataclasses.field(default_factory=lambda: TaskConfig_Obstacles())
 
 
 Config = TaskConfig()
@@ -118,12 +118,12 @@ Config = TaskConfig()
 def _cb_reconfigure(config):
     global Config
 
-    Config.General.RNG=np.random.default_rng((lambda x: x if x >= 0 else None)(config["RANDOM_seed"]))
-    Config.General.DESIRED_EPISODES=(lambda x: float("inf") if x<0 else x)(config["episodes"])
+    Config.General.RNG = np.random.default_rng((lambda x: x if x >= 0 else None)(config["RANDOM_seed"]))
+    Config.General.DESIRED_EPISODES = (lambda x: float("inf") if x < 0 else x)(config["episodes"])
     
-    Config.Robot.GOAL_TOLERANCE_RADIUS=config["goal_radius"]
-    Config.Robot.GOAL_TOLERANCE_ANGLE=config["goal_tolerance_angle"]
-    Config.Robot.TIMEOUT=(lambda x: float("inf") if x<0 else x)(config["timeout"])
+    Config.Robot.GOAL_TOLERANCE_RADIUS = config["goal_radius"]
+    Config.Robot.GOAL_TOLERANCE_ANGLE = config["goal_tolerance_angle"]
+    Config.Robot.TIMEOUT = (lambda x: float("inf") if x < 0 else x)(config["timeout"])
 
 dynamic_reconfigure.client.Client(
     name=Constants.TASK_GENERATOR_SERVER_NODE,
@@ -168,7 +168,7 @@ def lp(parameter: str, fallback: Any) -> Callable[[Optional[Any]], Any]:
     """
 
     # load once at the start
-    val = rospy.get_param(pedsim_ns(parameter), fallback)
+    val = rosros.get_param(pedsim_ns(parameter), fallback)
 
     gen = lambda: val
 

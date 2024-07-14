@@ -2,8 +2,7 @@ import functools
 import subprocess
 from typing import Callable, Collection, Dict, Iterator, List, Optional, Set, Tuple, Type, TypeVar
 
-
-import rospy
+import rosros
 import os
 import numpy as np
 
@@ -14,7 +13,6 @@ from task_generator.constants import Constants
 from task_generator.shared import ModelWrapper, Model, ModelType
 
 import nav_msgs.msg as nav_msgs
-
 
 class Utils:
     @staticmethod
@@ -92,7 +90,6 @@ class Utils:
         free_space_indices_new = np.where(map_2d == 0)
         return free_space_indices_new
 
-
 class NamespaceIndexer:
 
     _freed: List[int]
@@ -122,12 +119,10 @@ class NamespaceIndexer:
         index = self.get()
         return self.format(index), lambda: self.free(index)
 
-
 class _ModelLoader:
     @staticmethod
     def load(model_dir: str, model: str, **kwargs) -> Optional[Model]:
         ...
-
 
 class ModelLoader:
 
@@ -148,7 +143,7 @@ class ModelLoader:
         self._models = set()
 
         # potentially expensive
-        rospy.logdebug(
+        rosros.logdebug(
             f"models in {os.path.basename(model_dir)}: {self.models}")
 
     @property
@@ -157,7 +152,7 @@ class ModelLoader:
             if os.path.isdir(self._model_dir):
                 self._models = set(next(os.walk(self._model_dir))[1])
             else:
-                rospy.logwarn(
+                rosros.logwarn(
                     f"Model directory {self._model_dir} does not exist. No models are provided.")
                 self._models = set()
 
@@ -193,7 +188,6 @@ class ModelLoader:
 
         return None
 
-
 @ModelLoader.model(ModelType.YAML)
 class _ModelLoader_YAML(_ModelLoader):
 
@@ -217,7 +211,6 @@ class _ModelLoader_YAML(_ModelLoader):
             )
             return model_obj
 
-
 @ModelLoader.model(ModelType.SDF)
 class _ModelLoader_SDF(_ModelLoader):
 
@@ -240,7 +233,6 @@ class _ModelLoader_SDF(_ModelLoader):
                 path=model_path
             )
             return model_obj
-
 
 @ModelLoader.model(ModelType.URDF)
 class _ModelLoader_URDF(_ModelLoader):
@@ -266,7 +258,7 @@ class _ModelLoader_URDF(_ModelLoader):
             ]).decode("utf-8")
 
         except subprocess.CalledProcessError as e:
-            rospy.logerr_once(
+            rosros.logerr_once(
                 f"error processing model {model} URDF file {model_path}. refusing to load.\n{e}\n{e.output.decode('utf-8')}")
             return None
 
@@ -279,13 +271,11 @@ class _ModelLoader_URDF(_ModelLoader):
             )
             return model_obj
 
-
 T = TypeVar("T")
-_unspecified = rospy.client._Unspecified()
-
+_unspecified = rosros._Unspecified()
 
 def rosparam_get(cast: Type[T], param_name: str, default=_unspecified, strict: bool = False) -> T:
-    val = rospy.get_param(param_name=param_name, default=default)
+    val = rosros.get_param(param_name=param_name, default=default)
 
     if strict:
         if not isinstance(val, cast):

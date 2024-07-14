@@ -1,6 +1,8 @@
 from typing import Collection
-import rospy
 import yaml
+import dataclasses
+import numpy as np
+from rosros import rospify as rospy
 from task_generator.constants import Config, FlatlandRandomModel
 from task_generator.shared import (
     DynamicObstacle,
@@ -14,11 +16,7 @@ from task_generator.shared import (
 )
 from task_generator.simulators.flatland_simulator import FlatlandSimulator
 from .entity_manager import EntityManager
-
 from task_generator.shared import Model
-
-import numpy as np
-import dataclasses
 
 STATIC_OBS_BASENAME = "static_obs_"
 DYNAMIC_OBS_BASENAME = "dynamic_obs_"
